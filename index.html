@@ -13,6 +13,7 @@
 @property --a{syntax:'<angle>';initial-value:180deg;inherits:false}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--night);color-scheme:dark;-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:80px}
+.chap,.ideas,.answers,.shot,main{scroll-margin-top:80px}
 body{background:var(--night);color:var(--on);font:400 19px/1.5 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip;-webkit-tap-highlight-color:transparent}
 body::after{content:"";position:fixed;inset:0;z-index:95;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 @media (max-width:760px){body::after{display:none}}
@@ -297,8 +298,8 @@ button.th:active{transform:scale(.97)}
    <div class="meter" aria-live="polite"><div class="meter-top"><span><span class="num m-n">0</span> of 14 done</span><span class="num m-p">0%</span></div><div class="track" aria-hidden="true"><i></i></div></div>
   </div>
   <ul class="jump">
-   <li class="rv" style="--i:0"><a href="#drone"><span class="jb i-R090" aria-hidden="true"></span><span class="jgo" aria-hidden="true"><svg class="i"><use href="#arrow-down"/></svg></span><span class="jk"><svg class="i" aria-hidden="true"><use href="#drone"/></svg>Shots 1 to 6</span><b>Drone</b><span class="jc"><span class="num jd-n">0</span> of 6 done</span></a></li>
-   <li class="rv" style="--i:1"><a href="#ground"><span class="jb i-R014" aria-hidden="true"></span><span class="jgo" aria-hidden="true"><svg class="i"><use href="#arrow-down"/></svg></span><span class="jk"><svg class="i" aria-hidden="true"><use href="#camera"/></svg>Shots 7 to 14</span><b>Ground</b><span class="jc"><span class="num jg-n">0</span> of 8 done</span></a></li>
+   <li class="rv" style="--i:0"><a href="#drone-shots"><span class="jb i-R090" aria-hidden="true"></span><span class="jgo" aria-hidden="true"><svg class="i"><use href="#arrow-down"/></svg></span><span class="jk"><svg class="i" aria-hidden="true"><use href="#drone"/></svg>Shots 1 to 6</span><b>Drone</b><span class="jc"><span class="num jd-n">0</span> of 6 done</span></a></li>
+   <li class="rv" style="--i:1"><a href="#ground-shots"><span class="jb i-R014" aria-hidden="true"></span><span class="jgo" aria-hidden="true"><svg class="i"><use href="#arrow-down"/></svg></span><span class="jk"><svg class="i" aria-hidden="true"><use href="#camera"/></svg>Shots 7 to 14</span><b>Ground</b><span class="jc"><span class="num jg-n">0</span> of 8 done</span></a></li>
   </ul>
   <div class="when rv" aria-labelledby="h-cam">
    <p class="just-k" id="h-cam"><svg class="i" aria-hidden="true"><use href="#camera"/></svg>Camera notes</p>
@@ -320,7 +321,7 @@ button.th:active{transform:scale(.97)}
  </div>
 </section>
 
-<section class="chap" id="drone" aria-labelledby="h-drone">
+<section class="chap" id="drone-shots" aria-labelledby="h-drone">
  <div class="wrap">
   <p class="kick"><span class="kn" aria-hidden="true"><svg class="i"><use href="#drone"/></svg></span>Drone · shots 1 to 6</p>
   <h2 class="h2" id="h-drone">From the <em>air</em></h2>
@@ -330,7 +331,7 @@ button.th:active{transform:scale(.97)}
  </div>
 </section>
 
-<section class="chap" id="ground" aria-labelledby="h-ground">
+<section class="chap" id="ground-shots" aria-labelledby="h-ground">
  <div class="wrap">
   <p class="kick"><span class="kn" aria-hidden="true"><svg class="i"><use href="#camera"/></svg></span>Ground · shots 7 to 14</p>
   <h2 class="h2" id="h-ground">On the <em>ground</em></h2>
@@ -450,6 +451,26 @@ $$('.rv,.crest').forEach(el=>rio.observe(el));
 let sq=false;
 function onScroll(){sq=false;document.body.classList.toggle('scrolled',scrollY>30);}
 addEventListener('scroll',()=>{if(!sq){sq=true;requestAnimationFrame(onScroll);}},{passive:true});onScroll();
+
+/* every # link scrolls by script, so it works in in-app browsers (Telegram, WhatsApp) that ignore native anchors */
+function snap(y){const d=document.documentElement,p=d.style.scrollBehavior;d.style.scrollBehavior='auto';window.scrollTo(0,y);if(Math.abs((window.pageYOffset||0)-y)>4){(document.scrollingElement||d).scrollTop=y;document.body.scrollTop=y;}d.style.scrollBehavior=p;}
+function jumpTo(id){
+  const t=document.getElementById(id);if(!t)return false;
+  const nav=document.querySelector('.nav'),off=(nav?nav.offsetHeight:68)+12;
+  const y=Math.max(0,Math.round(t.getBoundingClientRect().top+(window.pageYOffset||document.documentElement.scrollTop||0)-off));
+  const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+  try{window.scrollTo({top:y,left:0,behavior:reduce?'auto':'smooth'});}catch(e){window.scrollTo(0,y);}
+  /* safety net: if the browser ignored the smooth scroll, snap there */
+  setTimeout(()=>{if(Math.abs((window.pageYOffset||0)-y)>4){snap(y);}},1300);
+  return true;
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a)return;
+  const id=decodeURIComponent(a.getAttribute('href').slice(1));
+  if(id==='top'){e.preventDefault();try{window.scrollTo({top:0,behavior:'smooth'});}catch(x){window.scrollTo(0,0);}setTimeout(()=>{if((window.pageYOffset||0)>4)snap(0);},1300);return;}
+  if(jumpTo(id))e.preventDefault();
+});
+if(location.hash.length>1){const id=decodeURIComponent(location.hash.slice(1));addEventListener('load',()=>setTimeout(()=>jumpTo(id),250));}
 
 /* tap a render to open it bigger */
 const lb=$('.lb'),lbi=$('.lb-img');let lastTh=null;
